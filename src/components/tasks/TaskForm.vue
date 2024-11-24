@@ -12,13 +12,14 @@
               <v-col cols="12">
                 <v-text-field
                   v-model="formData.title"
-                  :rules="taskValidation.titleRules"
+                  :rules="[...taskValidation.titleRules, validateDuplicateTitle]"
                   label="Title"
                   required
                   :error-messages="errors.title"
                   @input="clearError('title')"
                   maxlength="100"
                   counter
+                  :disabled="loading"
                 ></v-text-field>
               </v-col>
 
@@ -34,6 +35,7 @@
                   counter
                   auto-grow
                   rows="3"
+                  :disabled="loading"
                 ></v-textarea>
               </v-col>
 
@@ -46,6 +48,7 @@
                   required
                   :error-messages="errors.status"
                   @update:model-value="clearError('status')"
+                  :disabled="loading"
                 ></v-select>
               </v-col>
 
@@ -58,6 +61,7 @@
                   required
                   :error-messages="errors.priority"
                   @update:model-value="clearError('priority')"
+                  :disabled="loading"
                 ></v-select>
               </v-col>
 
@@ -71,6 +75,7 @@
                   :error-messages="errors.dueDate"
                   @input="clearError('dueDate')"
                   :min="minDate"
+                  :disabled="loading"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -82,7 +87,10 @@
         <v-spacer></v-spacer>
         <v-btn color="grey" variant="text" @click="closeDialog" :disabled="loading">Cancel</v-btn>
         <v-btn color="primary" @click="submit" :loading="loading" :disabled="!valid || loading">
-          {{ isEditing ? 'Update' : 'Create' }}
+          <v-icon start v-if="!loading">
+            {{ isEditing ? 'mdi-pencil' : 'mdi-plus' }}
+          </v-icon>
+          {{ isEditing ? 'Update Task' : 'Create Task' }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -123,7 +131,7 @@ const form = ref<InstanceType<(typeof import('vuetify/components'))['VForm']> | 
 const valid = ref(false)
 const loading = ref(false)
 
-// Compute minimum date (today)
+// minimum date (today)
 const minDate = computed(() => new Date().toISOString().split('T')[0])
 
 // Form error handling
@@ -131,6 +139,19 @@ const errors = reactive<FormErrors>(taskValidation.createEmptyErrors())
 
 const clearError = (field: keyof FormErrors) => {
   taskValidation.clearError(errors, field)
+}
+
+// Validate duplicate title
+const validateDuplicateTitle = (value: string) => {
+  if (!value) return true
+
+  const normalizedTitle = value.trim().toLowerCase()
+  const existingTask = taskStore.tasks.find((task) => {
+    if (props.task?.id === task.id) return false
+    return task.title.trim().toLowerCase() === normalizedTitle
+  })
+
+  return !existingTask || 'A task with this title already exists'
 }
 
 // Form data
@@ -203,10 +224,11 @@ const submit = async () => {
   try {
     if (isEditing.value && props.task?.id) {
       await taskStore.updateTask({ ...formData, id: props.task.id })
+      emit('saved')
     } else {
       await taskStore.createTask(formData)
+      emit('saved')
     }
-    emit('saved')
     closeDialog()
   } catch (error) {
     console.error('Error saving task:', error)

@@ -10,13 +10,24 @@ export const useTaskStore = defineStore('taskStore', {
   }),
 
   actions: {
+    // Persist tasks to local storage
+    persistToLocalStorage() {
+      localStorage.setItem('tasks', JSON.stringify(this.tasks))
+    },
+
     async fetchTasks(page = 1, limit = 10) {
       this.loading = true
       this.error = null
 
       try {
-        const tasks = await TaskService.fetchTasks(page, limit)
-        this.tasks = tasks
+        const storedTasks = localStorage.getItem('tasks')
+        if (storedTasks) {
+          this.tasks = JSON.parse(storedTasks)
+        } else {
+          const tasks = await TaskService.fetchTasks(page, limit)
+          this.tasks = tasks
+          this.persistToLocalStorage()
+        }
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'An unknown error occurred'
       } finally {
@@ -31,6 +42,7 @@ export const useTaskStore = defineStore('taskStore', {
       try {
         const newTask = await TaskService.createTask(task)
         this.tasks.push(newTask)
+        this.persistToLocalStorage()
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Failed to create task'
       } finally {
@@ -38,15 +50,15 @@ export const useTaskStore = defineStore('taskStore', {
       }
     },
 
-    async updateTask(task: Task) {
+    async updateTask(updatedTask: Task) {
       this.loading = true
       this.error = null
 
       try {
-        const updatedTask = await TaskService.updateTask(task)
-        const index = this.tasks.findIndex((t) => t.id === task.id)
+        const index = this.tasks.findIndex((task) => task.id === updatedTask.id)
         if (index !== -1) {
           this.tasks[index] = updatedTask
+          this.persistToLocalStorage()
         }
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Failed to update task'
@@ -62,6 +74,7 @@ export const useTaskStore = defineStore('taskStore', {
       try {
         await TaskService.deleteTask(taskId)
         this.tasks = this.tasks.filter((task) => task.id !== taskId)
+        this.persistToLocalStorage()
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Failed to delete task'
       } finally {

@@ -179,7 +179,6 @@ const viewTaskDetails = (task: Task) => {
 const onTaskSaved = () => {
   selectedTask.value = null
   showForm.value = false
-  taskStore.fetchTasks()
 }
 </script>
 

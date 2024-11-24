@@ -96,12 +96,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTaskStore } from '@/stores/taskStore'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 import { Task } from '@/types/Task'
 import { formatDate } from '@/utils/dateFormatter'
+import { getStatusColor, getPriorityColor } from '@/utils/color'
 
 interface Subtask {
   id: number
@@ -118,37 +119,24 @@ const subtasks = ref<Subtask[]>([])
 const newSubtask = ref('')
 const showEditDialog = ref(false)
 
-onMounted(async () => {
+const updateLocalTask = () => {
   const taskId = Number(route.params.id)
-  task.value = taskStore.tasks.find((t) => t.id === taskId) || null
-
-  if (!task.value) {
-    try {
-      await taskStore.fetchTasks()
-      task.value = taskStore.tasks.find((t) => t.id === taskId) || null
-    } catch (error) {
-      console.error('Error fetching task:', error)
-    }
+  const updatedTask = taskStore.tasks.find((t) => t.id === taskId)
+  if (updatedTask) {
+    task.value = { ...updatedTask }
+    subtasks.value = updatedTask.subtasks || []
   }
+}
+
+watch(() => taskStore.tasks, updateLocalTask, { deep: true })
+
+onMounted(async () => {
+  if (taskStore.tasks.length === 0) {
+    await taskStore.fetchTasks()
+  }
+
+  updateLocalTask()
 })
-
-const getStatusColor = (status: string) => {
-  const colors = {
-    Pending: 'orange',
-    'In Progress': 'blue',
-    Completed: 'green',
-  }
-  return colors[status as keyof typeof colors] || 'grey'
-}
-
-const getPriorityColor = (priority: string) => {
-  const colors = {
-    Low: 'green',
-    Medium: 'orange',
-    High: 'red',
-  }
-  return colors[priority as keyof typeof colors] || 'grey'
-}
 
 const editTask = () => {
   showEditDialog.value = true
@@ -156,26 +144,55 @@ const editTask = () => {
 
 const onTaskUpdated = async () => {
   showEditDialog.value = false
-  const taskId = Number(route.params.id)
-  await taskStore.fetchTasks()
-  task.value = taskStore.tasks.find((t) => t.id === taskId) || null
+  if (task.value) {
+    try {
+      await taskStore.updateTask(task.value)
+      updateLocalTask()
+    } catch (error) {
+      console.error('Error updating task:', error)
+    }
+  }
 }
 
-const addSubtask = () => {
-  if (!newSubtask.value) return
+const addSubtask = async () => {
+  if (!newSubtask.value || !task.value) return
 
-  subtasks.value.push({
+  const newSubtaskObj = {
     id: Date.now(),
     title: newSubtask.value,
     completed: false,
-  })
+  }
 
-  newSubtask.value = ''
+  const updatedTask = { ...task.value }
+  updatedTask.subtasks = updatedTask.subtasks
+    ? [...updatedTask.subtasks, newSubtaskObj]
+    : [newSubtaskObj]
+
+  try {
+    await taskStore.updateTask(updatedTask)
+    updateLocalTask()
+    newSubtask.value = ''
+  } catch (error) {
+    console.error('Error adding subtask:', error)
+  }
 }
 
-const updateSubtask = (subtask: Subtask) => {
-  // Implement subtask update logic here
-  console.log('Updating subtask:', subtask)
+const updateSubtask = async (subtask: Subtask) => {
+  if (!task.value) return
+
+  const updatedTask = { ...task.value }
+  const subtaskIndex = updatedTask.subtasks?.findIndex((s) => s.id === subtask.id)
+
+  if (subtaskIndex !== undefined && subtaskIndex !== -1 && updatedTask.subtasks) {
+    updatedTask.subtasks[subtaskIndex] = { ...subtask }
+
+    try {
+      await taskStore.updateTask(updatedTask)
+      updateLocalTask()
+    } catch (error) {
+      console.error('Error updating subtask:', error)
+    }
+  }
 }
 </script>
 

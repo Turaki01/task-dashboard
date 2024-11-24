@@ -10,8 +10,8 @@
     >
       <template v-slot:item="{ item }">
         <tr>
-          <td>{{ item.title }}</td>
-          <td>{{ item.description }}</td>
+          <td>{{ truncateText(item.title, 40) }}</td>
+          <td>{{ truncateText(item.description, 50) }}</td>
           <td>
             <v-chip :color="getStatusColor(item.status)" size="small">
               {{ item.status }}
@@ -53,7 +53,7 @@
         <v-col cols="12" md="6" v-for="task in tasks" :key="task.id">
           <v-card class="mb-4">
             <v-card-title class="d-flex justify-space-between align-center">
-              <div class="text-truncate">{{ task.title }}</div>
+              <div class="text-truncate">{{ truncateText(task.title, 30) }}</div>
               <v-menu>
                 <template v-slot:activator="{ props }">
                   <v-btn
@@ -78,7 +78,7 @@
             </v-card-title>
 
             <v-card-text>
-              <div class="text-body-2 mb-2">{{ task.description }}</div>
+              <div class="text-body-2 mb-2">{{ truncateText(task.description, 80) }}</div>
               <div class="d-flex flex-wrap gap-2">
                 <v-chip :color="getStatusColor(task.status)" size="small">
                   {{ task.status }}
@@ -102,6 +102,8 @@
 import { ref, computed } from 'vue'
 import { useDisplay } from 'vuetify'
 import type { Task } from '@/types/Task'
+import { getStatusColor, getPriorityColor } from '@/utils/color'
+import { truncateText } from '@/utils/text'
 
 const props = defineProps<{
   tasks: Task[]
@@ -155,24 +157,6 @@ const headers = ref([
     key: 'actions',
   },
 ])
-
-const getStatusColor = (status: string) => {
-  const colors = {
-    Pending: 'warning',
-    'In Progress': 'info',
-    Completed: 'success',
-  }
-  return colors[status as keyof typeof colors] || 'grey'
-}
-
-const getPriorityColor = (priority: string) => {
-  const colors = {
-    Low: 'success',
-    Medium: 'warning',
-    High: 'error',
-  }
-  return colors[priority as keyof typeof colors] || 'grey'
-}
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString()

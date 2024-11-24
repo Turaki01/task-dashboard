@@ -10,10 +10,11 @@
               </v-col>
               <v-col cols="12" md="4" class="d-flex justify-start justify-md-end">
                 <v-btn
+                  data-testid="new-task-button"
                   color="primary"
                   prepend-icon="mdi-plus"
                   @click="showTaskForm"
-                  :disabled="loading"
+                  :disabled="taskStore.loading"
                 >
                   New Task
                 </v-btn>
@@ -28,21 +29,22 @@
                   v-model="filters.status"
                   :items="['All', 'Pending', 'In Progress', 'Completed']"
                   label="Filter by Status"
-                  @update:model-value="applyFilters"
-                  :disabled="loading"
+                  @update:model-value="() => {}"
+                  :disabled="taskStore.loading"
                 ></v-select>
               </v-col>
               <v-col cols="12" md="4">
                 <v-select
+                  data-test="priority-select"
                   v-model="filters.priority"
                   :items="['All', 'Low', 'Medium', 'High']"
                   label="Filter by Priority"
-                  @update:model-value="applyFilters"
-                  :disabled="loading"
+                  @update:model-value="() => {}"
+                  :disabled="taskStore.loading"
                 ></v-select>
               </v-col>
               <v-col cols="12" md="4">
-                <v-btn-toggle v-model="sortOrder" mandatory :disabled="loading">
+                <v-btn-toggle v-model="sortOrder" mandatory :disabled="taskStore.loading">
                   <v-btn value="asc">
                     <v-icon>mdi-sort-ascending</v-icon>
                   </v-btn>
@@ -55,17 +57,17 @@
 
             <div class="tasks-container">
               <LoadingSpinner
-                v-if="loading"
+                v-if="taskStore.loading"
                 size="large"
                 color="primary"
                 show-label
                 label="Loading tasks..."
               />
 
-              <div v-else-if="error" class="text-center py-8">
+              <div v-else-if="taskStore.error" class="text-center py-8">
                 <v-icon color="error" size="large" class="mb-2">mdi-alert-circle</v-icon>
-                <p class="text-body-1 text-error">{{ error }}</p>
-                <v-btn color="primary" @click="retryFetch" class="mt-4">Retry</v-btn>
+                <p class="text-body-1 text-error">{{ taskStore.error }}</p>
+                <v-btn color="primary" class="mt-4">Retry</v-btn>
               </div>
 
               <TaskList
@@ -91,8 +93,14 @@
         <v-card-text>Are you sure you want to delete this task?</v-card-text>
         <v-card-actions class="pt-5 pb-3">
           <v-spacer></v-spacer>
-          <v-btn color="grey" text @click="showDeleteDialog = false">Cancel</v-btn>
-          <v-btn color="error" @click="confirmDelete" :loading="deleting">Delete</v-btn>
+          <v-btn color="grey" @click="showDeleteDialog = false">Cancel</v-btn>
+          <v-btn
+            color="error"
+            data-testid="confirm-delete-button"
+            @click="confirmDelete"
+            :loading="deleting"
+            >Delete</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -103,10 +111,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTaskStore } from '@/stores/taskStore'
-import { Task } from '@/types/Task'
 import TaskList from '@/components/tasks/TaskList.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import type { Task } from '@/types/Task'
 
 const router = useRouter()
 const taskStore = useTaskStore()

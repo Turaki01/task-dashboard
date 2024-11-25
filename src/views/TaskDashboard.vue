@@ -43,16 +43,6 @@
                   :disabled="taskStore.loading"
                 ></v-select>
               </v-col>
-              <v-col cols="12" md="4">
-                <v-btn-toggle v-model="sortOrder" mandatory :disabled="taskStore.loading">
-                  <v-btn value="asc">
-                    <v-icon>mdi-sort-ascending</v-icon>
-                  </v-btn>
-                  <v-btn value="desc">
-                    <v-icon>mdi-sort-descending</v-icon>
-                  </v-btn>
-                </v-btn-toggle>
-              </v-col>
             </v-row>
 
             <div class="tasks-container">

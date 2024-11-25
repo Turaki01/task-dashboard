@@ -99,11 +99,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue'
-import { Task } from '@/types/Task'
+import type { Task } from '@/types/Task'
 import { useTaskStore } from '@/stores/taskStore'
 import {
   taskValidation,
-  FormErrors,
+  type FormErrors,
   statusOptions,
   priorityOptions,
 } from '@/validators/taskValidation'
@@ -198,17 +198,17 @@ watch(
 const validateForm = async (): Promise<boolean> => {
   if (!form.value) return false
 
-  const isValid = await form.value.validate()
+  const { valid, errors: validationErrors } = await form.value.validate()
 
-  if (!isValid) {
+  if (!valid) {
     const fields = ['title', 'description', 'status', 'priority', 'dueDate'] as const
     fields.forEach((field) => {
-      const fieldErrors = form.value?.items.find((item) => item.id === field)?.errorBucket || []
-      errors[field] = fieldErrors
+      const fieldError = validationErrors.find((error) => error.id === field)
+      errors[field] = fieldError ? fieldError.errorMessages : []
     })
   }
 
-  return isValid
+  return valid
 }
 
 const closeDialog = () => {

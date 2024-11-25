@@ -4,12 +4,12 @@
       <v-col cols="12">
         <v-card>
           <v-card-title class="d-flex align-center py-2">
-            <v-btn icon @click="router.back()">
+            <v-btn icon @click="router.back()" data-testid="back-button">
               <v-icon size="md">mdi-arrow-left</v-icon>
             </v-btn>
             <span class="ml-4 text-body">Task Details</span>
             <v-spacer></v-spacer>
-            <v-btn color="primary" @click="editTask"> Edit </v-btn>
+            <v-btn color="primary" @click="editTask" data-testid="edit-task-button"> Edit </v-btn>
           </v-card-title>
 
           <v-card-text class="mt-8" v-if="task">
@@ -49,9 +49,14 @@
               <v-col cols="12">
                 <div class="text-h6">Subtasks</div>
                 <v-list v-if="subtasks.length > 0">
-                  <v-list-item v-for="subtask in subtasks" :key="subtask.id">
+                  <v-list-item
+                    v-for="subtask in subtasks"
+                    :key="subtask.id"
+                    data-testid="subtask-item"
+                  >
                     <v-list-item-title>
                       <v-checkbox
+                        :data-testid="`subtask-checkbox-${subtask.id}`"
                         v-model="subtask.completed"
                         :label="subtask.title"
                         @change="updateSubtask(subtask)"
@@ -67,13 +72,20 @@
                     <v-col cols="12" md="8">
                       <v-text-field
                         v-model="newSubtask"
+                        data-testid="new-subtask-input"
                         label="New Subtask"
                         hide-details
                         dense
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12" md="4">
-                      <v-btn color="primary" class="h-100" type="submit" :disabled="!newSubtask">
+                      <v-btn
+                        color="primary"
+                        class="h-100"
+                        type="submit"
+                        :disabled="!newSubtask"
+                        data-testid="add-subtask-button"
+                      >
                         Add Subtask
                       </v-btn>
                     </v-col>
@@ -100,7 +112,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTaskStore } from '@/stores/taskStore'
 import TaskForm from '@/components/tasks/TaskForm.vue'
-import { Task } from '@/types/Task'
+import type { Task } from '@/types/Task'
 import { formatDate } from '@/utils/dateFormatter'
 import { getStatusColor, getPriorityColor } from '@/utils/color'
 

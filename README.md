@@ -60,4 +60,6 @@ Unit tests are located in the `tests` directory.
 
 ## env.example
 
+```bash
 VITE_API_BASE_URL=
+```

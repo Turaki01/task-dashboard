@@ -1,7 +1,7 @@
 import type { Task } from '@/types/Task'
 import axios from 'axios'
 
-const BASE_URL = 'https://jsonplaceholder.typicode.com/todos' // Placeholder API
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 class TaskService {
   async fetchTasks(page = 1, limit = 10): Promise<Task[]> {

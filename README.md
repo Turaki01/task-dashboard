@@ -45,7 +45,10 @@ npm run test:unit
 ## Project Structure
 
 - `src/types/`: TypeScript interfaces
+- `src/plugins/`: Configuration for vuetify
 - `src/services/`: API interaction logic
 - `src/stores/`: Pinia state management
 - `src/components/`: Vue components
+- `src/views/`: Vue views
+- `src/router/`: Vue router configuration
 - `tests/`: Unit tests

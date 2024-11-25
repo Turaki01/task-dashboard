@@ -52,3 +52,12 @@ npm run test:unit
 - `src/views/`: Vue views
 - `src/router/`: Vue router configuration
 - `tests/`: Unit tests
+- `public/`: Static assets
+
+## Testing
+
+Unit tests are located in the `tests` directory.
+
+## env.example
+
+VITE_API_BASE_URL=
